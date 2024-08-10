@@ -1,0 +1,18 @@
+meta {
+  name: bookings
+  type: http
+  seq: 3
+}
+
+post {
+  url: localhost:8080/bookings
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+      "user":"sahil",
+      "tickets":5
+  }
+}
