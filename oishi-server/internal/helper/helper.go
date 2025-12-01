@@ -58,6 +58,12 @@ func ErrorMatch(err error) MyHTTPErrors {
 			Err:      fmt.Errorf("user not found"),
 			HttpCode: fiber.StatusForbidden,
 		}
+	} else if strings.Contains(err.Error(), "Some tables failed to book") {
+		return MyHTTPErrors{
+			Err:      err,
+			HttpCode: fiber.StatusMultipleChoices,
+		}
+
 	} else {
 		return MyHTTPErrors{
 			Err:      fmt.Errorf("internal server error"),

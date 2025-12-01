@@ -8,6 +8,13 @@ import (
 	"github.com/SahilMahale/OishiDes/oishi-server/server"
 )
 
+// @title OishiDes Docs
+// @version 1.0
+// @description Swagger docs for OishiDes server
+// @contact.name API Support
+// @license.name Apache 2.0
+// @host localhost:8001
+// @BasePath /
 const totalTIckets = 50
 
 func main() {
@@ -20,6 +27,6 @@ func main() {
 		ipAddrNPort = "localhost:8001"
 	}
 	fmt.Println("Staring server....")
-	bookingService := server.NewBookingService("Booking app", ipAddrNPort, totalTIckets, db)
+	bookingService := server.NewBookingService("OishiDes Server", ipAddrNPort, totalTIckets, db)
 	bookingService.StartBookingService()
 }
