@@ -1,24 +1,24 @@
-version: '3'
 services:
   mysqldb:
-    image: 'bitnami/mysql'
+    image: 'mysql:8.0'
     ports:
       - 3001:3306
-    environment: 
+    environment:
       MYSQL_ROOT_PASSWORD: password123
       MYSQL_DATABASE: OishiDatabase
     healthcheck:
-      test: ["CMD","/opt/bitnami/scripts/mysql/healthcheck.sh"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       start_period: 30s
       interval: 20s
       timeout: 10s
       retries: 5
+    networks:
+      - oishi-network
+
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     ports:
       - 8001:80
-    links:
-        - mysqldb
     environment:
       PMA_HOST: mysqldb
       PMA_PORT: 3306
@@ -26,19 +26,21 @@ services:
     depends_on:
       mysqldb:
         condition: service_healthy
+    networks:
+      - oishi-network
+
   oishi-server:
-    image: oishi-server:v0.0.1
+    build:
+      context: ./oishi-server
+      dockerfile: Dockerfile
     ports:
       - 8003:8080
-    links:
-      - mysqldb
     environment:
-      MYSQL_USERNAME: root 
-      MYSQL_PASSWORD: password123 
-      MYSQL_IP: mysqldb:3306 
+      MYSQL_USERNAME: root
+      MYSQL_PASSWORD: password123
+      MYSQL_IP: mysqldb:3306
       APP_AUTH: /app/secrets
       SERVER_BIND_TO: 0.0.0.0:8080
-    command: /app/main
     restart: always
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:8080 || exit 1
@@ -49,12 +51,16 @@ services:
     depends_on:
       mysqldb:
         condition: service_healthy
+    networks:
+      - oishi-network
+
   oishi-ui:
-    image: oishi-ui:v0.0.1
-    ports: 
+    build:
+      context: ./oishi-ui
+      dockerfile: Dockerfile
+      target: prod
+    ports:
       - 4000:8080
-    links:
-      - oishi-server
     depends_on:
       oishi-server:
         condition: service_healthy
@@ -62,5 +68,9 @@ services:
       API_SERVER_HOST: oishi-server:8080
     command: /bin/sh -c "nginx -g 'daemon off;'"
     restart: always
+    networks:
+      - oishi-network
 
-# docker run --name test-booking-ui-1 --network=booking-app_default  -p 8080:8080  booking-ui:0.0.1
+networks:
+  oishi-network:
+    driver: bridge
