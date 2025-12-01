@@ -1,21 +1,24 @@
 FROM golang:1.20.5-bullseye
-#ENV MYSQL_USERNAME=root \
- # MYSQL_PASSWORD=password123 \
-  #MYSQL_IP="mysqldb:3306" \
-  #APP_AUTH="/app/secrets" \
-  #SERVER_BIND_TO="localhost:8081"
+
+# Install netcat for database connection checking
+RUN apt-get update && apt-get install -y netcat && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 COPY go.mod go.sum ./
-RUN go mod download && go mod tidy 
+RUN go mod download && go mod tidy
 
 COPY . .
 
 RUN go build /app/cmd/main.go
 
+# Copy and set up entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 EXPOSE 8080
 
-#CMD [ "/app/main" ]
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["/app/main"]
 
 

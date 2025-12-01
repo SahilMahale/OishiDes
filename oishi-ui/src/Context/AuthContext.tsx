@@ -16,7 +16,7 @@ const enum ACTIONS {
   RETURNSTATE
 }
 export type JWTclaims = {
-  user: string,
+  name: string,
   type: string
 }
 
@@ -39,7 +39,7 @@ export type ActionType = {
 
 const initialContext: Context = {
   isLoggedIn: false,
-  claims: { user: "dummy", type: "dummy" },
+  claims: { name: "dummy", type: "dummy" },
   token: '',
   isRecovered: false,
 }

@@ -1,5 +1,5 @@
 import React, { useReducer } from 'react';
-import { Button } from '@/components/ui/button';
+//import { Button } from '@/components/ui/button';
 import { TableCard } from './-TableCard';
 import icon from './ButtonIcon.svg'
 import { cardInfo, TableInfo } from './-mockAPI';
@@ -143,7 +143,7 @@ function Book() {
   console.log("-----------------------------------------")
   const [tablesStates, dispatchTables] = useReducer<React.Reducer<TableGridState, TableStateActions>>(tableReducer, initialState);
   const { Context: appContext } = useAuth()
-  const userName = appContext.claims.user
+  const userName = appContext.claims.name
   // to avoid too many re-render
   useMemo(() => {
     cardInfo.tables.map((table) => {
@@ -179,15 +179,14 @@ function Book() {
             }))}
           </div>
           <div className='fixed lg:bottom-36 lg:right-44 sm:right-32 right-[1px] p-4 flex'>
-            <Button
-              size="lg"
+            <button
               onClick={() => {
                 dispatchTables({ type: ACTIONS.BOOK })
               }}
               className={` ${(tablesStates.selectedTables?.length > 0) ? "bg-cyan-400 text-cyan-900" : "bg-gray-500 text-gray-200"}   rounded-full   drop-shadow-2xl font-bold`}>
               <img src={icon} />
               Book
-            </Button>
+            </button>
           </div>
         </div>
       </div >

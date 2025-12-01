@@ -18,10 +18,18 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
+	"github.com/gofiber/swagger"
 
 	jwtware "github.com/gofiber/contrib/jwt"
 )
 
+// @title OishiDes Docs
+// @version 1.0
+// @description Swagger docs for OishiDes server
+// @contact.name API Support
+// @license.name Apache 2.0
+// @host localhost:8001
+// @BasePath /
 var (
 	privateKey *rsa.PrivateKey
 	publicKey  *rsa.PublicKey
@@ -42,11 +50,24 @@ type bookingService struct {
 type BookingServicer interface {
 	GetBookings(c *fiber.Ctx) error
 	GetTickets(c *fiber.Ctx) error
-	BookTickets(c *fiber.Ctx) error
 	DeleteBooking(c *fiber.Ctx) error
 	CreateUser(c *fiber.Ctx) error
 	LoginUser(c *fiber.Ctx) error
-	GetAllUsers(c *fiber.Ctx) error
+	BookTables(c *fiber.Ctx) error
+	GetB(c *fiber.Ctx) error
+	PayForBooking(c *fiber.Ctx) error
+	CancelBooking(c *fiber.Ctx) error
+	GetUserInfo(c *fiber.Ctx) error
+	GetAllTables(c *fiber.Ctx) error
+	CreatePayment(c *fiber.Ctx) error
+	CreateCancellation(c *fiber.Ctx) error
+	UpdatePayment(c *fiber.Ctx) error
+	DeletePayment(c *fiber.Ctx) error
+	UpdateCancellation(c *fiber.Ctx) error
+	DeleteCancellation(c *fiber.Ctx) error
+	CreateTables(c *fiber.Ctx) error
+	UpdateTables(c *fiber.Ctx) error
+	DeleteTables(c *fiber.Ctx) error
 	StartBookingService()
 }
 
@@ -107,36 +128,41 @@ func (B *bookingService) GetBookings(c *fiber.Ctx) error {
 	var bookarr []db.Bookings
 	var err helper.MyHTTPErrors
 	bookCtrl := bookings.NewBookingController(B.DbInterface)
-	user := c.Query("user")
+	userNameSpecified := c.Query("user")
 	claims, errp := getClaimsForThisCall(authToken)
 	if errp != nil {
 		panic(errp)
 	}
 	isAdmin := checkIfAdmin(claims.Type)
 
-	if user == "" {
+	if userNameSpecified == "" {
 		if isAdmin {
 			bookarr, err = bookCtrl.GetBookings()
 		} else {
 			return c.Status(fiber.StatusUnauthorized).SendString("Not an admin")
 		}
 	} else {
-		if user == claims.Name || isAdmin {
-			bookarr, err = bookCtrl.GetBookingsForUser(user)
+		if userNameSpecified == claims.Name || isAdmin {
+			bookarr, err = bookCtrl.GetBookingsForUser(userNameSpecified)
 		} else {
 			return c.Status(fiber.StatusUnauthorized).SendString("Not authorized to make this request")
 		}
 	}
 
 	if err.Err != nil {
+		if err.HttpCode == fiber.StatusMultipleChoices {
+			return c.Status(err.HttpCode).JSON(bookarr)
+		}
 		return c.Status(err.HttpCode).SendString(err.Err.Error())
 	}
 	bookRespArr := []models.BookingsResponse{}
 	for _, book := range bookarr {
 		bookEntry := models.BookingsResponse{
-			BookingID:     book.BookingID,
-			Username:      book.UsernameRefer,
-			TicketsBooked: book.Tickets,
+			BookingID: book.BookingID,
+			Username:  book.UsernameRefer,
+			Status:    book.Status,
+			CreatedAt: book.CreatedAt,
+			UpdatedAt: book.UpdatedAt,
 		}
 		bookRespArr = append(bookRespArr, bookEntry)
 	}
@@ -203,7 +229,7 @@ func (B *bookingService) GetAllUsers(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusAccepted).JSON(usersList)
 }
 
-func (B *bookingService) BookTickets(c *fiber.Ctx) error {
+func (B *bookingService) BookTables(c *fiber.Ctx) error {
 	authToken := getAuthToken(c)
 
 	claims, errp := getClaimsForThisCall(authToken)
@@ -221,16 +247,27 @@ func (B *bookingService) BookTickets(c *fiber.Ctx) error {
 	if (book.Username != claims.Name) && !isAdmin {
 		return c.Status(fiber.StatusUnauthorized).SendString("Unauthorized to book ticket for this user")
 	}
+	if len(book.Tables) < 1 {
+		return c.Status(fiber.StatusBadRequest).SendString("Please Select Tables to book, Array is Empty")
+	}
+	if len(book.Tables) > 2 && !isAdmin {
+		return c.Status(fiber.StatusBadRequest).SendString("A user can only book 2 Tables at once")
+	}
+	if len(book.Tables) > 5 {
+		return c.Status(fiber.StatusBadRequest).SendString("Only 4 Tables can be booked at once")
+	}
 	bookCtrl = bookings.NewBookingController(B.DbInterface)
-	bookid, err := bookCtrl.CreateBooking(book.Username, book.Tickets)
+	bookings, err := bookCtrl.CreateBooking(book.Username, book.Tables)
 	if err.Err != nil {
 		return c.Status(err.HttpCode).SendString(err.Err.Error())
 	}
 
 	bookResp := models.BookingsResponse{
-		BookingID:     bookid,
-		Username:      book.Username,
-		TicketsBooked: book.Tickets,
+		BookingID: bookings.BookingID,
+		Username:  bookings.Username,
+		Status:    bookings.Status,
+		CreatedAt: bookings.CreatedAt,
+		UpdatedAt: bookings.UpdatedAt,
 	}
 	return c.Status(fiber.StatusAccepted).JSON(bookResp)
 }
@@ -272,6 +309,7 @@ func (B *bookingService) StartBookingService() {
 	userGroup.Post("/signup", B.CreateUser)
 	userGroup.Post("/signin", B.LoginUser)
 
+	B.app.Get("/swagger/*", swagger.HandlerDefault)
 	adminGroup := B.app.Group("/admin")
 	adminGroup.Post("/signup", B.CreateUser)
 	adminGroup.Post("/signin", B.LoginUser)
@@ -284,10 +322,14 @@ func (B *bookingService) StartBookingService() {
 	// authenticated routes
 	userGroup.Get("/info", B.GetAllUsers)
 	bookingGroup := B.app.Group("/bookings")
+	// legacy concept testing routes need to remove
 	bookingGroup.Get("", B.GetBookings)
-	bookingGroup.Post("", B.BookTickets)
+	bookingGroup.Post("", B.BookTables)
+	//--
+	bookingGroup.Post("/tables", B.BookTables)
 	bookingGroup.Delete("/:bookID", B.DeleteBooking)
 
+	// Swagger Docs
 	err := B.app.Listen(B.ip)
 	if err != nil {
 		log.Error(err)

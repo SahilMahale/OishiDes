@@ -1,0 +1,12 @@
+basePath: /
+host: localhost:8001
+info:
+  contact:
+    name: API Support
+  description: Swagger docs for OishiDes server
+  license:
+    name: Apache 2.0
+  title: OishiDes Docs
+  version: "1.0"
+paths: {}
+swagger: "2.0"

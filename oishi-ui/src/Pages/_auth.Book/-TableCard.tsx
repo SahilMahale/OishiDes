@@ -22,7 +22,7 @@ export const TableCard = (({ tableInfo, state, dispatcherFunc }: { tableInfo: Ta
   const tableInfoRef = useRef(tableInfo)
 
   function handleClick(tableInfo: TableInfo) {
-    console.log("CardCLicked with Status:", state.tableStatus)
+    /*     console.log("CardCLicked with Status:", state.tableStatus) */
     try {
       if (state.tableStatus === TABLESTATES.SELECTED) {
         //setIsSelected(!tableIsSelected)
@@ -45,7 +45,7 @@ export const TableCard = (({ tableInfo, state, dispatcherFunc }: { tableInfo: Ta
       hover:ring-2 hover:ring-cyan-400 drop-shadow-2xl shadow-lg shadow-slate-900 hover:shadow-xl hover:shadow-cyan-700/60">
       <CardHeader className="relative items-center bg-gray-700 text-gray-100">
         <CardTitle className="text-center">
-          Table
+          {`Table ${tableInfoRef.current.id}`}
         </CardTitle>
         <CardDescription>
           Table Description

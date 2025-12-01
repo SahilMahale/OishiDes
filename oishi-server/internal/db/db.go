@@ -31,6 +31,9 @@ func NewDBConnection() (DbConnection, error) {
 	// Automigrate and create the tables
 	db.AutoMigrate(User{})
 	db.AutoMigrate(Bookings{})
+	db.AutoMigrate(Table{})
+	db.AutoMigrate(Cancellation{})
+	db.AutoMigrate(Payment{})
 	// db.AutoMigrate(Admins{})
 	return DbConnection{
 		Db: db,

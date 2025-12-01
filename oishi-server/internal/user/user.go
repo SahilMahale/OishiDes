@@ -43,7 +43,7 @@ func (u UserDataController) CreateUser(username, email, pass string, isAdmin boo
 		user = db.User{Username: username, Email: email, Pass: string(hashPass), Role: constants.User}
 	}
 
-	if err := u.DbInterface.Db.Create(user); err.Error != nil {
+	if err := u.DbInterface.Db.Create(&user); err.Error != nil {
 		myerr := helper.ErrorMatch(err.Error)
 		return myerr
 	}

@@ -1,0 +1,18 @@
+meta {
+  name: bookings Delete
+  type: http
+  seq: 4
+}
+
+delete {
+  url: localhost:8080/bookings/888
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+      "user":"sahil",
+      "tickets":3
+  }
+}

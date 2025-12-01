@@ -1,6 +1,7 @@
 FROM node:20-alpine AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
+ENV CI=true
 RUN corepack enable
 COPY . /app
 WORKDIR /app
@@ -15,6 +16,6 @@ RUN pnpm run build
 FROM nginx:1.25.4-alpine as prod
 COPY --from=prod-deps /app/node_modules /app/node_modules
 COPY --from=build /app/dist /usr/share/nginx/html
-COPY ./nginx.conf.template /etc/nginx/conf.d/
+COPY ./nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 8080
 

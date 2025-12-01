@@ -1,6 +1,9 @@
 # OishiDes (_oh-ee-shee des_)
-A basic booking app with Go as backend(no AUTH/ no Update) and vite/react as front end(WIP)  
-mainly to practice DB connection with gorm, implement auth from scratch and to learn vite
+A SPA that helps manage a boutique restaurant and book tables for customers, built use Go, TS, react and vite.
+
+## Demo
+
+![OishiDes Demo](artifacts/oishi-alpha-demo.gif)
 
 ## Development 
 
