@@ -16,6 +16,7 @@ import { Route as IndexImport } from './Pages/index'
 import { Route as UsersIndexImport } from './Pages/Users/index'
 import { Route as SignUpIndexImport } from './Pages/SignUp/index'
 import { Route as LoginIndexImport } from './Pages/Login/index'
+import { Route as DashboardIndexImport } from './Pages/Dashboard/index'
 import { Route as AuthHomeImport } from './Pages/_auth.Home'
 import { Route as AuthBookTablesImport } from './Pages/_auth.Book/Tables'
 
@@ -43,6 +44,11 @@ const SignUpIndexRoute = SignUpIndexImport.update({
 
 const LoginIndexRoute = LoginIndexImport.update({
   path: '/Login/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const DashboardIndexRoute = DashboardIndexImport.update({
+  path: '/Dashboard/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -81,6 +87,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthHomeImport
       parentRoute: typeof AuthImport
     }
+    '/Dashboard/': {
+      id: '/Dashboard/'
+      path: '/Dashboard'
+      fullPath: '/Dashboard'
+      preLoaderRoute: typeof DashboardIndexImport
+      parentRoute: typeof rootRoute
+    }
     '/Login/': {
       id: '/Login/'
       path: '/Login'
@@ -117,6 +130,7 @@ declare module '@tanstack/react-router' {
 export const routeTree = rootRoute.addChildren({
   IndexRoute,
   AuthRoute: AuthRoute.addChildren({ AuthHomeRoute, AuthBookTablesRoute }),
+  DashboardIndexRoute,
   LoginIndexRoute,
   SignUpIndexRoute,
   UsersIndexRoute,
@@ -132,6 +146,7 @@ export const routeTree = rootRoute.addChildren({
       "children": [
         "/",
         "/_auth",
+        "/Dashboard/",
         "/Login/",
         "/SignUp/",
         "/Users/"
@@ -150,6 +165,9 @@ export const routeTree = rootRoute.addChildren({
     "/_auth/Home": {
       "filePath": "_auth.Home.tsx",
       "parent": "/_auth"
+    },
+    "/Dashboard/": {
+      "filePath": "Dashboard/index.tsx"
     },
     "/Login/": {
       "filePath": "Login/index.tsx"
